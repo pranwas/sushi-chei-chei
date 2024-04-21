@@ -18,9 +18,11 @@ dotenv.config({ path: './config/config.env' });
 connectDB();
 
 //Route files
-const hospitals = require('./routes/hospitals');
+// const hospitals = require('./routes/hospitals');
 const auth = require('./routes/auth');
-const appointments = require('./routes/appointments');
+// const appointments = require('./routes/appointments');
+const menu = require('./routes/menu');
+const table = require('./routes/table');
 
 const app = express();
 
@@ -35,7 +37,7 @@ const swaggerOptions = {
         servers:
             [
                 {
-                    url: 'http://localhost:5000/api/v1'
+                    url: 'http://localhost:5/api/v1'
                 }
             ],
     },
@@ -73,9 +75,13 @@ app.use(hpp());
 //Enable CORS
 app.use(cors());
 
-app.use('/api/v1/hospitals', hospitals);
+// app.use('/api/v1/hospitals', hospitals);
+// app.use('/api/v1/auth', auth);
+// app.use('/api/v1/appointments', appointments);
+
+app.use('/api/v1/menu', menu);
 app.use('/api/v1/auth', auth);
-app.use('/api/v1/appointments', appointments);
+app.use('/api/v1/table', table);
 
 const PORT = process.env.PORT || 5000
 const server = app.listen(PORT, console.log('Server running in ', process.env.NODE_ENV, ' mode on port ', PORT));
