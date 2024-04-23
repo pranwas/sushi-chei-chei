@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 //@access       Public
 exports.getMenu = async (req, res, next) => {
     const menu = await Menu.find({});
-    res.status(200).json({ success: true, data: menu });
+    return res.status(200).json({ success: true, data: menu });
 }
 
 //@desc     Get Menu By Category
@@ -24,7 +24,7 @@ exports.getMenuByCategory = async (req, res, next) => {
             success: true, data: menu
         });
     } catch (err) {
-        res.status(400).json({ success: false });
+        return res.status(400).json({ success: false });
     }
 
 };
@@ -57,9 +57,9 @@ exports.createMenu = async (req, res, next) => {
             tags: objectIdTagArray,
             price: price,
         });
-        res.status(201).json({ success: true, data: menu });
+        return res.status(201).json({ success: true, data: menu });
     } catch (err) {
-        res.status(400).json({ success: false });
+        return res.status(400).json({ success: false });
         console.log(err.stack);
     }
 }
