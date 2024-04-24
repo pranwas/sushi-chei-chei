@@ -10,9 +10,6 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
-// start test websocket
-const WebSocket = require('ws');
-// end test websocket
 
 //Load env vars
 dotenv.config({ path: './config/config.env' });
@@ -97,6 +94,3 @@ process.on('unhandledRejection', (err, promise) => {
     //Close server & exit process
     server.close(() => process.exit(1));
 })
-// start test websocket
-const wss = new WebSocket.Server({ server });
-// end test websocket
