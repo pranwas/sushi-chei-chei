@@ -20,7 +20,6 @@ exports.submitNewOrder = async (req, res, next) => {
   try {
     const { table, orderItem } = req.body;
     const status = 'incoming'
-    console.log(req.body);
 
     // check if orderItem is an array
     if (!Array.isArray(orderItem)) {
@@ -55,8 +54,6 @@ exports.submitNewOrder = async (req, res, next) => {
 
     // save the new order to the database
     const order = await newOrder.save();
-
-    console.log(order);
 
     return res.status(201).json({ success: true, data: "success" });
   } catch (error) {
