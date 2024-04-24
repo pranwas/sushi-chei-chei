@@ -5,17 +5,38 @@ const mongoose = require("mongoose");
 //@route        GET /api/v1/menu
 //@access       Public
 
+// get all orders with status not closed
+// create websocket for real time update
 exports.getAllOrder = async (req, res, next) => {
-  const order = await Order.find({});
-  return res.status(200).json({ success: true, data: order });
+  try {
+    const order = await Order.find({ status: { $ne: "closed" } });
+    return res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: "External server error" });
+  }
 };
 
 exports.submitNewOrder = async (req, res, next) => {
   try {
-    const { table, status, name, price, quantity, category } = req.body;
+    const { table, orderItem } = req.body;
+    const status = 'incoming'
+
+    // check if orderItem is an array
+    if (!Array.isArray(orderItem)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Order item must be an array." });
+    }
+
+    // check if orderItem is empty
+    if (orderItem.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Order item cannot be empty." });
+    }
 
     // check if all required fields are provided
-    if (!table || !status || !name || !price || !quantity || !category) {
+    if (!table) {
       return res
         .status(400)
         .json({
@@ -28,12 +49,7 @@ exports.submitNewOrder = async (req, res, next) => {
     const newOrder = new Order({
       table,
       status,
-      orderItem: {
-        name,
-        price,
-        quantity,
-        category,
-      },
+      orderItem: [...orderItem]
     });
 
     // save the new order to the database
@@ -44,6 +60,8 @@ exports.submitNewOrder = async (req, res, next) => {
     return res.status(500).json({ success: false, error: "External server error" });
   }
 };
+
+// type StatusType = "incoming" | "preparing" |  'completed' | 'canceled' | 'closed'
 
 exports.changeOrderStatus = async (req, res, next) => {
   try {
@@ -85,6 +103,41 @@ exports.getAllOrderByTableNumber = async (req, res, next) => {
   try {
     const tableNumber = req.params.table;
 
+    // find all orders on the specified table that status is not closed
+    const order = await Order.find({ table: tableNumber, status: { $ne: "closed" } });
+
+    // if there are no orders on the specified table
+    if (!order || order.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No orders found for this table." });
+    }
+
+    const responseData = order.map((order) => {
+        return {
+          status: order.status,
+          name: order.orderItem[0].name,
+          price: order.orderItem[0].price,
+          quantity: order.orderItem[0].quantity,
+          category: order.orderItem[0].category,
+        }
+    });
+
+    const flatData = responseData.flat(); // flatten the array
+
+    return res.status(200).json({ success: true, data: flatData });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, error: "External server error" });
+  }
+};
+
+// closed status by table number
+exports.closeOrderByTableNumber = async (req, res, next) => {
+  try {
+    const tableNumber = req.params.table;
+
     // find all orders on the specified table
     const order = await Order.find({ table: tableNumber });
 
@@ -95,31 +148,13 @@ exports.getAllOrderByTableNumber = async (req, res, next) => {
         .json({ success: false, message: "No orders found for this table." });
     }
 
-    // create json response from order data
-    // const orderData = orders.map((order) => ({
-    //   name: order.orderItem.name,
-    //   price: order.orderItem.price,
-    //   quantity: order.orderItem.quantity,
-    //   category: order.orderItem.category,
-    // }));
+    // update all orders on the specified table to closed status
+    const updatedOrder = await Order.updateMany(
+      { table: tableNumber },
+      { status: "closed" }
+    );
 
-    let responseData;
-
-    // Check if the route is /tableNumber
-    if (req.originalUrl.includes("/:table")) {
-      // create json response from order data
-      responseData = order.map((order) => ({
-        name: order.orderItem[0].name,
-        price: order.orderItem[0].price,
-        quantity: order.orderItem[0].quantity,
-        category: order.orderItem[0].category,
-      }));
-    } else {
-      // create json response from all orders data
-      responseData = order.map((order) => order.orderItem);
-    }
-
-    return res.status(200).json({ success: true, data: responseData });
+    return res.status(200).json({ success: true, data: "Success" });
   } catch (error) {
     return res
       .status(500)
