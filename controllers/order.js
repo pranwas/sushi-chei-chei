@@ -1,13 +1,30 @@
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
+const WebSocket = require("ws");
+const wss = new WebSocket.Server({ port: 8000 });
+// webSocket event listener
+wss.on("connection", function connection(ws) {
+  console.log("Client connected");
+
+  ws.on("message", function incoming(message) {
+    console.log("received: %s", message);
+  });
+});
 
 //@desc         Get All Order
 //@route        GET /api/v1/menu
 //@access       Public
 
 exports.getAllOrder = async (req, res, next) => {
-  const order = await Order.find({});
-  return res.status(200).json({ success: true, data: order });
+  const order = await Order.find({ status: { $ne: "canceled" } });
+  // send data through websocket instead of HTTP response
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ success: true, data: order }));
+    }
+  });
+  // HTTP response
+  // return res.status(200).json({ success: true, data: order });
 };
 
 exports.submitNewOrder = async (req, res, next) => {
@@ -16,12 +33,10 @@ exports.submitNewOrder = async (req, res, next) => {
 
     // check if all required fields are provided
     if (!table || !status || !name || !price || !quantity || !category) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Please provide all required fields.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields.",
+      });
     }
 
     // create a new order object
@@ -41,7 +56,9 @@ exports.submitNewOrder = async (req, res, next) => {
 
     return res.status(201).json({ success: true, data: "success" });
   } catch (error) {
-    return res.status(500).json({ success: false, error: "External server error" });
+    return res
+      .status(500)
+      .json({ success: false, error: "External server error" });
   }
 };
 
