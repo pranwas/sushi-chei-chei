@@ -12,8 +12,8 @@ const MenuSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['appetizer', 'nigiri', 'sasimi', 'soup'],
-        default: 'appetizer'
+        enum: ['sushi', 'drinks', 'dessert'],
+        default: 'sushi'
     },
     createdAt: {
         type: Date,

@@ -24,6 +24,7 @@ exports.getMenuByCategory = async (req, res, next) => {
             success: true, data: menu
         });
     } catch (err) {
+        console.log(err.message);
         return res.status(400).json({ success: false });
     }
 
@@ -50,16 +51,16 @@ exports.getMenuByCategory = async (req, res, next) => {
 //@access       Private
 exports.createMenu = async (req, res, next) => {
     try {
-        const { name, price, tags } = req.body;
-        const objectIdTagArray = tags.map(tagId => new mongoose.Types.ObjectId(tagId));
+        const { name, price, category } = req.body;
+        console.log(req.body);
         const menu = await Menu.create({
             name: name,
-            tags: objectIdTagArray,
             price: price,
+            category: category,
         });
         return res.status(201).json({ success: true, data: menu });
     } catch (err) {
-        return res.status(400).json({ success: false });
         console.log(err.stack);
+        return res.status(400).json({ success: false });
     }
 }
