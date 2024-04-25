@@ -1,14 +1,5 @@
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
-const WebSocket = require("ws");
-const wss = new WebSocket.Server({ port: 8000 });
-// webSocket event listener
-wss.on("connection", function connection(ws) {
-  console.log("Client connected");
-  ws.on("message", function incoming(message) {
-    console.log("received: %s", message);
-  });
-});
 
 //@desc         Get All Order
 //@route        GET /api/v1/order
@@ -17,15 +8,12 @@ wss.on("connection", function connection(ws) {
 // get all orders with status not closed
 // create websocket for real time update
 exports.getAllOrder = async (req, res, next) => {
-  const order = await Order.find({ status: { $ne: "canceled" } });
-  // send data through websocket instead of HTTP response
-  wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ success: true, data: order }));
-    }
-  });
-  // HTTP response
-  // return res.status(200).json({ success: true, data: order });
+  try {
+    const order = await Order.find({ status: { $ne: "closed" } });
+    return res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: "External server error" });
+  }
 };
 
 exports.submitNewOrder = async (req, res, next) => {
